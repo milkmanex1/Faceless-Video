@@ -1,0 +1,5 @@
+{
+  "name": "clipforge-backend",
+  "private": true,
+  "type": "module"
+}
