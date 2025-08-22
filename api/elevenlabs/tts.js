@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "missing ELEVENLABS_API_KEY" });
   }
 
-  const { text } = req.body;
+  const { text } = req.body || {};
   if (!text) return res.status(400).json({ error: "Missing text input" });
 
   try {
@@ -16,7 +16,8 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "xi-api-key": ELEVENLABS_API_KEY,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Accept": "audio/mpeg"            // ✅ add this
       },
       body: JSON.stringify({
         text,
@@ -29,10 +30,9 @@ export default async function handler(req, res) {
 
     if (!r.ok) {
       const err = await r.text();
-      return res.status(400).json({ error: err });
+      return res.status(r.status).json({ error: err }); // ✅ use upstream status
     }
 
-    // return audio as a base64 string or URL
     const audioBuffer = await r.arrayBuffer();
     const base64Audio = Buffer.from(audioBuffer).toString("base64");
 
