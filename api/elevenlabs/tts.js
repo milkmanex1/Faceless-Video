@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "POST only" });
   }
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       headers: {
         "xi-api-key": ELEVENLABS_API_KEY,
         "Content-Type": "application/json",
-        "Accept": "audio/mpeg"            // ✅ add this
+        "Accept": "audio/mpeg"
       },
       body: JSON.stringify({
         text,
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
     if (!r.ok) {
       const err = await r.text();
-      return res.status(r.status).json({ error: err }); // ✅ use upstream status
+      return res.status(r.status).json({ error: err });
     }
 
     const audioBuffer = await r.arrayBuffer();
@@ -40,4 +40,4 @@ export default async function handler(req, res) {
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
-}
+};
