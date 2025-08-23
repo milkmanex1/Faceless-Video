@@ -6,6 +6,11 @@ export default async function handler(req, res) {
   try {
     const { text, voice_id } = req.body;
 
+    if (!text || !voice_id) {
+      return res.status(400).json({ error: "Missing text or voice_id" });
+    }
+
+    // Call ElevenLabs API
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}`, {
       method: "POST",
       headers: {
@@ -24,21 +29,22 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const err = await response.text();
-      return res.status(response.status).json({ error: err });
+      return res.status(500).json({ error: "ElevenLabs API failed", details: err });
     }
 
-    // Return audio as base64
+    // Return the audio file as base64 (for testing only)
     const audioBuffer = await response.arrayBuffer();
     const base64Audio = Buffer.from(audioBuffer).toString("base64");
 
     return res.status(200).json({
       ok: true,
+      message: "TTS generated successfully",
       audio: base64Audio,
     });
 
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal Server Error" });
+  } catch (err) {
+    return res.status(500).json({ error: "Internal server error", details: err.message });
   }
 }
+
 
