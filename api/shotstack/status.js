@@ -1,24 +1,41 @@
 export default async function handler(req, res) {
-  const { SHOTSTACK_API_KEY, SHOTSTACK_ENV } = process.env;
-  const env = SHOTSTACK_ENV || "stage";
-  const { renderId } = req.query || {};
-  if (!renderId) return res.status(400).json({ error: "renderId required" });
+  // --- CORS headers ---
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  const r = await fetch(`https://api.shotstack.io/edit/${env}/render/${renderId}`, {
-    headers: { "x-api-key": SHOTSTACK_API_KEY }
-  });
-  const data = await r.json();
-  if (!r.ok) return res.status(400).json(data);
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
-  // Try to return a stable url if present
-  const cdn =
-    data?.response?.url ||
-    data?.data?.attributes?.output?.url ||
-    data?.data?.attributes?.url ||
-    null;
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-  return res.status(200).json({
-    status: data?.response?.status || data?.data?.attributes?.status || "unknown",
-    url: cdn
-  });
+  try {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).json({ error: "Missing render ID" });
+    }
+
+    // --- Call Shotstack status endpoint ---
+    const response = await fetch(`https://api.shotstack.io/stage/render/${id}`, {
+      method: "GET",
+      headers: {
+        "x-api-key": process.env.SHOTSTACK_API_KEY,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return res.status(response.status).json(error);
+    }
+
+    const data = await response.json();
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Status Error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 }
