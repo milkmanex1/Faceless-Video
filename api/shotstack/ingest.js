@@ -20,3 +20,34 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         timeline: {
+          tracks: [
+            {
+              clips: [
+                {
+                  asset: {
+                    type: "audio",
+                    src: `data:audio/mpeg;base64,${audio}`,
+                  },
+                  start: 0,
+                  length: 10,
+                },
+              ],
+            },
+          ],
+        },
+        output: { format: "mp4", resolution: "sd" },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return res.status(response.status).json(error);
+    }
+
+    const data = await response.json();
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("Shotstack Error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
