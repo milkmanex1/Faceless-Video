@@ -1,4 +1,5 @@
 export default async function handler(req, res) {
+  // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -12,14 +13,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { text, voice_id } = req.body;
+    const { text, voice_id, voiceId } = req.body;
+    const finalVoiceId = voice_id || voiceId;
 
-    if (!text || !voice_id) {
+    if (!text || !finalVoiceId) {
       return res.status(400).json({ error: "Missing text or voice_id" });
     }
 
     // Call ElevenLabs API
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}`, {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${finalVoiceId}`, {
       method: "POST",
       headers: {
         "Accept": "audio/mpeg",
