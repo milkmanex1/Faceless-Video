@@ -1,4 +1,7 @@
 export default async function handler(req, res) {
+
+  // Disable caching so Vercel always runs fresh
+  res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
