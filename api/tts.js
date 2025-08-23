@@ -1,13 +1,9 @@
 export const config = {
-  api: {
-    bodyParser: true,
-  },
+  runtime: "nodejs",
+  dynamic: "force-dynamic"
 };
 
 export default async function handler(req, res) {
-  // Disable Vercel's CDN cache completely
-  res.setHeader("Cache-Control", "no-store, max-age=0");
-
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -19,7 +15,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing text or voice_id" });
     }
 
-    // Call ElevenLabs API
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voice_id}`,
       {
@@ -41,9 +36,10 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const err = await response.text();
-      return res
-        .status(500)
-        .json({ error: "ElevenLabs API failed", details: err });
+      return res.status(500).json({
+        error: "ElevenLabs API failed",
+        details: err,
+      });
     }
 
     const audioBuffer = await response.arrayBuffer();
@@ -55,8 +51,9 @@ export default async function handler(req, res) {
       audio: base64Audio,
     });
   } catch (err) {
-    return res
-      .status(500)
-      .json({ error: "Internal server error", details: err.message });
+    return res.status(500).json({
+      error: "Internal server error",
+      details: err.message,
+    });
   }
 }
