@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  console.log("Ingest request body:", req.body);
   // --- CORS headers ---
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -17,10 +16,10 @@ export default async function handler(req, res) {
     const { audio } = req.body;
 
     if (!audio) {
-      return res.status(400).json({ error: "Missing audio file" });
+      return res.status(400).json({ error: "Missing audio base64 string" });
     }
 
-    // --- Call Shotstack API ---
+    // --- Call Shotstack API with base64 audio directly ---
     const response = await fetch("https://api.shotstack.io/stage/edit", {
       method: "POST",
       headers: {
@@ -28,8 +27,6 @@ export default async function handler(req, res) {
         "x-api-key": process.env.SHOTSTACK_API_KEY,
       },
       body: JSON.stringify({
-        // Put your Shotstack payload here.
-        // Example: passing the audio to be ingested
         timeline: {
           tracks: [
             {
@@ -37,10 +34,10 @@ export default async function handler(req, res) {
                 {
                   asset: {
                     type: "audio",
-                    src: `data:audio/mpeg;base64,${audio}`,
+                    src: `data:audio/mpeg;base64,${audio}`, // 👈 embed base64 directly
                   },
                   start: 0,
-                  length: 10,
+                  length: 10, // adjust depending on your audio duration
                 },
               ],
             },
@@ -55,13 +52,4 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const error = await response.json();
-      return res.status(response.status).json(error);
-    }
-
-    const data = await response.json();
-    res.status(200).json(data);
-  } catch (error) {
-    console.error("Shotstack Error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-}
+      return res.status(response.status)
