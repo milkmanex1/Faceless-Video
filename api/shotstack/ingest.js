@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // --- CORS headers ---
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -11,8 +10,8 @@ export default async function handler(req, res) {
     const { audio } = req.body;
     if (!audio) return res.status(400).json({ error: "Missing audio base64 string" });
 
-    // ✅ Correct Shotstack ingest endpoint //
-    const response = await fetch("https://api.shotstack.io/stage/ingest", {
+    // --- Call Shotstack EDIT API to start render ---
+    const response = await fetch("https://api.shotstack.io/edit/stage/render", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -26,16 +25,19 @@ export default async function handler(req, res) {
                 {
                   asset: {
                     type: "audio",
-                    src: `data:audio/mpeg;base64,${audio}`,
+                    src: `data:audio/mpeg;base64,${audio}`, // directly embed TTS audio
                   },
                   start: 0,
-                  length: 10,
+                  length: 10, // seconds – adjust later based on your audio
                 },
               ],
             },
           ],
         },
-        output: { format: "mp4", resolution: "sd" },
+        output: {
+          format: "mp4",
+          resolution: "sd",
+        },
       }),
     });
 
@@ -45,6 +47,7 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
+    // data contains editId
     res.status(200).json(data);
   } catch (err) {
     console.error("Shotstack Error:", err);
